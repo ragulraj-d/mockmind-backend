@@ -2,23 +2,23 @@ import json
 import re
 from typing import List
 
-from google import genai
-from google.genai import types
+from groq import Groq
 
 from models.schemas import Question, EvaluationResult, EvaluationCriteria
 from config import settings
 
-client = genai.Client(api_key=settings.GEMINI_API_KEY)
-MODEL = "gemini-2.5-flash"
+client = Groq(api_key=settings.GROQ_API_KEY)
+MODEL = "llama-3.3-70b-versatile"
 
 
 def _generate(prompt: str) -> str:
-    response = client.models.generate_content(
+    response = client.chat.completions.create(
         model=MODEL,
-        contents=prompt,
-        config=types.GenerateContentConfig(temperature=0.7),
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7,
+        max_tokens=4096,
     )
-    return response.text.strip()
+    return response.choices[0].message.content.strip()
 
 
 async def generate_questions(
@@ -56,7 +56,7 @@ Make questions diverse — avoid repetition. Number them 1 to {num_questions}.""
     text = _generate(prompt)
     json_match = re.search(r"\[.*\]", text, re.DOTALL)
     if not json_match:
-        raise ValueError("Gemini did not return a valid JSON array for questions")
+        raise ValueError("Groq did not return a valid JSON array for questions")
 
     questions_data = json.loads(json_match.group())
     return [Question(**q) for q in questions_data[:num_questions]]
@@ -89,16 +89,16 @@ Difficulty: {difficulty}
 Question: {question}
 Candidate Answer: {answer}
 
-Score each criterion 0–10. Return ONLY valid JSON, no markdown:
+Score each criterion 0-10. Return ONLY valid JSON, no markdown, no extra text:
 {{
-  "score": <weighted overall 0–10, 2 decimal places>,
+  "score": <weighted overall 0-10, 2 decimal places>,
   "criteria": {{
-    "accuracy": <0–10>,
-    "clarity": <0–10>,
-    "depth": <0–10>,
-    "confidence": <0–10>
+    "accuracy": <0-10>,
+    "clarity": <0-10>,
+    "depth": <0-10>,
+    "confidence": <0-10>
   }},
-  "feedback": "<2–3 constructive sentences>",
+  "feedback": "<2-3 constructive sentences>",
   "strengths": ["<specific strength 1>", "<specific strength 2>"],
   "improvements": ["<specific improvement 1>", "<specific improvement 2>"],
   "model_answer_hint": "<one sentence hint on what a great answer covers>"
@@ -111,12 +111,12 @@ Scoring guidance (adjust for {difficulty} level):
 - confidence: Does the language show conviction and expertise?
 - overall score: weighted average (accuracy 35%, depth 30%, clarity 20%, confidence 15%)
 
-Be encouraging but honest. Tailor strictness to the {difficulty} level."""
+Be encouraging but honest."""
 
     text = _generate(prompt)
     json_match = re.search(r"\{.*\}", text, re.DOTALL)
     if not json_match:
-        raise ValueError("Gemini did not return valid JSON for evaluation")
+        raise ValueError("Groq did not return valid JSON for evaluation")
 
     eval_data = json.loads(json_match.group())
     return EvaluationResult(
@@ -146,9 +146,9 @@ Collected Strengths: {all_strengths}
 Collected Improvements: {all_improvements}
 
 Write a 2-3 sentence motivational summary and pick top 3 strengths and top 3 improvements.
-Return ONLY valid JSON:
+Return ONLY valid JSON, no markdown:
 {{
-  "summary": "<motivational 2–3 sentence summary>",
+  "summary": "<motivational 2-3 sentence summary>",
   "key_strengths": ["<strength 1>", "<strength 2>", "<strength 3>"],
   "key_improvements": ["<area 1>", "<area 2>", "<area 3>"]
 }}"""
