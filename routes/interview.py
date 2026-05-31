@@ -11,7 +11,7 @@ from models.schemas import (
     InterviewSetupRequest,
     SessionResult,
 )
-from services import firebase_service, gemini_service
+from services import firebase_service, groq_service
 
 router = APIRouter()
 
@@ -19,7 +19,7 @@ router = APIRouter()
 @router.post("/start-interview", response_model=InterviewSession)
 async def start_interview(request: InterviewSetupRequest):
     try:
-        questions = await gemini_service.generate_questions(
+        questions = await groq_service.generate_questions(
             interview_type=request.interview_type.value,
             domain=request.domain.value,
             difficulty=request.difficulty.value,
@@ -50,7 +50,7 @@ async def start_interview(request: InterviewSetupRequest):
 @router.post("/evaluate-answer", response_model=EvaluationResult)
 async def evaluate_answer(request: EvaluateAnswerRequest):
     try:
-        return await gemini_service.evaluate_answer(
+        return await groq_service.evaluate_answer(
             question=request.question,
             answer=request.answer,
             domain=request.domain,
@@ -64,7 +64,7 @@ async def evaluate_answer(request: EvaluateAnswerRequest):
 @router.post("/complete-session", response_model=SessionResult)
 async def complete_session(request: CompleteSessionRequest):
     try:
-        summary = await gemini_service.generate_session_summary(request.evaluations)
+        summary = await groq_service.generate_session_summary(request.evaluations)
 
         scores = [e.score for e in request.evaluations]
         overall = round(sum(scores) / len(scores), 1) if scores else 0.0
