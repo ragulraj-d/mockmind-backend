@@ -7,12 +7,17 @@ from groq import Groq
 from models.schemas import Question, EvaluationResult, EvaluationCriteria
 from config import settings
 
-client = Groq(api_key=settings.GROQ_API_KEY)
 MODEL = "llama-3.3-70b-versatile"
 
 
+def _get_client() -> Groq:
+    if not settings.GROQ_API_KEY:
+        raise RuntimeError("GROQ_API_KEY is not set. Add it in Render > Environment.")
+    return Groq(api_key=settings.GROQ_API_KEY)
+
+
 def _generate(prompt: str) -> str:
-    response = client.chat.completions.create(
+    response = _get_client().chat.completions.create(
         model=MODEL,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7,

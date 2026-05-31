@@ -13,6 +13,14 @@ from routes import interview, history
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Groq key check
+    groq_key = os.getenv("GROQ_API_KEY", "")
+    if groq_key:
+        print(f"GROQ_API_KEY loaded (prefix: {groq_key[:8]}...)")
+    else:
+        print("WARNING: GROQ_API_KEY not set - AI features will fail")
+
+    # Firebase (optional)
     if not firebase_admin._apps:
         service_account_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", "firebase-service-account.json")
         if service_account_path and os.path.exists(service_account_path):
