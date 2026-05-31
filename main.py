@@ -34,20 +34,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="MockMind API",
-    description="AI-powered mock interview backend powered by Gemini",
+    description="AI-powered mock interview backend powered by Groq (Llama 3.3 70B)",
     version="1.0.0",
     lifespan=lifespan,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://mockmind.web.app",
-        "https://mockmind.firebaseapp.com",
-        "http://localhost:3000",
-        "http://localhost:8080",
-        "http://localhost",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
