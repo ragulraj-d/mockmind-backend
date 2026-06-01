@@ -12,7 +12,7 @@ router = APIRouter()
 async def get_history(user_id: str):
     try:
         return await firebase_service.get_user_history(user_id)
-    except RuntimeError as e:
-        raise HTTPException(status_code=503, detail=f"Firebase unavailable: {e}")
+    except RuntimeError:
+        return []  # Firebase not configured on this instance
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
