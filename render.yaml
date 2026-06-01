@@ -15,3 +15,5 @@ services:
         value: 3.12.0
       - key: RENDER_EXTERNAL_URL
         value: https://mockmind-backend-x1qz.onrender.com
+      - key: FIREBASE_PROJECT_ID
+        value: mockmindai
